@@ -1,5 +1,5 @@
 import _ from 'lodash';
-export default function buildPhraseFilter(field, value, indexPattern) {
+export default function buildPhraseFilter(field, value, indexPattern, nested) {
   let filter = { meta: { index: indexPattern.id} };
 
   if (field.scripted) {
@@ -18,5 +18,16 @@ export default function buildPhraseFilter(field, value, indexPattern) {
       type: 'phrase'
     };
   }
+
+  if (typeof nested !== 'undefined') {
+    filter = {
+      meta: filter.meta,
+      nested: {
+        query: filter.query
+      }
+    };
+    filter.nested.path = nested.path;
+  }
+
   return filter;
 };

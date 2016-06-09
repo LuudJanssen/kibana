@@ -11,11 +11,11 @@ export default function createDateHistogramFilterProvider(Private) {
       lte: start.add(interval).valueOf(),
       format: 'epoch_millis'
     }, agg.vis.indexPattern);
-    
+
     if (agg.params.nested) {
-      filter = { 'nested' : { 'query' : { 'bool' : { 'must' : [{filter}]}}, 'path' : agg.params.nested.path}};
+      filter = {'nested': {'query': {'bool': {'must': [{filter}]}}, 'path': agg.params.nested.path}};
     }
-    
+
     return filter;
-    };
-};
+  };
+}
