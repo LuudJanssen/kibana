@@ -3,8 +3,15 @@
           <h5 ng-show="!field.details.error">Quick Count <kbn-info info="Top 5 values based on documents in the table" placement="right"></kbn-info>
             <span ng-if="!field.details.error" class="small discover-field-details-count">
               (
-              <a ng-show="field.indexed" ng-click="updateFilterInQuery('_exists_', field.name, '+')">{{::field.details.exists}}</a>
-              <span ng-show="!field.indexed">{{::field.details.exists}}</span>
+              <a
+                ng-show="!indexPattern.metaFields.includes(field.name)"
+                ng-click="updateFilterInQuery('_exists_', field.name, '+')">
+                {{::field.details.exists}}
+              </a>
+              <span
+                ng-show="indexPattern.metaFields.includes(field.name)">
+                {{::field.details.exists}}
+              </span>
               /{{::field.details.total}} records
               )
             </span>
@@ -35,7 +42,7 @@
         </div>
       </div>
 
-      <a ng-show="field.indexed || field.scripted"
+      <a
         ng-href="{{vizLocation(field)}}"
         class="sidebar-item-button primary">
           Visualize
@@ -43,8 +50,3 @@
           ( {{::warnings.length}} <ng-pluralize count="warnings.length" when="{'1':'warning', 'other':'warnings'}"></ng-pluralize> <i aria-hidden="true" class="fa fa-warning"></i> )
           </span>
       </a>
-
-      <div ng-show="!field.indexed && !field.scripted"
-          disabled="disabled"
-          tooltip="This field is not indexed thus unavailable for visualization and search"
-          class="sidebar-item-button primary">Not Indexed</div>

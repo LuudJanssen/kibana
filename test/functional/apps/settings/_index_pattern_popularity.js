@@ -1,21 +1,19 @@
-define(function (require) {
-  var Common = require('../../../support/pages/Common');
-  var SettingsPage = require('../../../support/pages/SettingsPage');
-  var expect = require('intern/dojo/node!expect.js');
-  //var Promise = require('bluebird');
+import {
+  bdd,
+  common,
+  scenarioManager,
+  settingsPage,
+  esClient
+} from '../../../support';
 
-  return function (bdd, scenarioManager) {
+(function () {
+  var expect = require('expect.js');
+
+  (function () {
     bdd.describe('index result popularity', function describeIndexTests() {
-      var common;
-      var settingsPage;
-      var remote;
-
       bdd.before(function () {
-        common = new Common(this.remote);
-        settingsPage = new SettingsPage(this.remote);
-        remote = this.remote;
-
-        return scenarioManager.reload('emptyKibana')
+        // delete .kibana index and then wait for Kibana to re-create it
+        return esClient.deleteAndUpdateConfigDoc()
         .then(function () {
           return settingsPage.navigateTo();
         });
@@ -48,9 +46,11 @@ define(function (require) {
             return common.sleep(1000);
           })
           .then(function openControlsByName() {
+            common.debug('Starting openControlsByName (' + fieldName + ')');
             return settingsPage.openControlsByName(fieldName);
           })
           .then(function increasePopularity() {
+            common.debug('increasePopularity');
             return settingsPage.increasePopularity();
           });
         });
@@ -63,6 +63,7 @@ define(function (require) {
         bdd.it('should update the popularity input', function () {
           return settingsPage.getPopularity()
           .then(function (popularity) {
+            common.debug('popularity = ' + popularity);
             expect(popularity).to.be('1');
           })
           .catch(common.handleError(this));
@@ -82,6 +83,7 @@ define(function (require) {
             return settingsPage.getPopularity();
           })
           .then(function (popularity) {
+            common.debug('popularity = ' + popularity);
             expect(popularity).to.be('0');
           })
           .catch(common.handleError(this));
@@ -101,11 +103,12 @@ define(function (require) {
             return settingsPage.getPopularity();
           })
           .then(function (popularity) {
+            common.debug('popularity = ' + popularity);
             expect(popularity).to.be('1');
           })
           .catch(common.handleError(this));
         });
       }); // end 'change popularity'
     }); // end index result popularity
-  };
-});
+  }());
+}());

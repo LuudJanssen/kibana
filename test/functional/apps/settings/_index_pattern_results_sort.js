@@ -1,23 +1,20 @@
-define(function (require) {
-  var config = require('intern').config;
-  var Common = require('../../../support/pages/Common');
-  var SettingsPage = require('../../../support/pages/SettingsPage');
-  var expect = require('intern/dojo/node!expect.js');
-  var Promise = require('bluebird');
+import {
+  bdd,
+  common,
+  defaultTimeout,
+  settingsPage,
+  scenarioManager,
+  esClient
+} from '../../../support';
 
-  return function (bdd, scenarioManager) {
+(function () {
+  var expect = require('expect.js');
+
+  (function () {
     bdd.describe('index result field sort', function describeIndexTests() {
-      var common;
-      var settingsPage;
-      var remote;
-      var defaultTimeout = config.timeouts.default;
-
       bdd.before(function () {
-        common = new Common(this.remote);
-        settingsPage = new SettingsPage(this.remote);
-        remote = this.remote;
-
-        return scenarioManager.reload('emptyKibana');
+        // delete .kibana index and then wait for Kibana to re-create it
+        return esClient.deleteAndUpdateConfigDoc();
       });
 
       var columns = [{
@@ -95,7 +92,7 @@ define(function (require) {
         });
 
         bdd.it('makelogs data should have expected number of fields', function () {
-          return common.tryForTime(defaultTimeout, function () {
+          return common.try(function () {
             return settingsPage.getFieldsTabCount()
             .then(function (tabCount) {
               expect(tabCount).to.be('' + expectedFieldCount);
@@ -134,5 +131,5 @@ define(function (require) {
         });
       }); // end describe pagination
     }); // end index result field sort
-  };
-});
+  }());
+}());

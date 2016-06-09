@@ -1,21 +1,20 @@
-define(function (require) {
-  var Common = require('../../../support/pages/Common');
-  var SettingsPage = require('../../../support/pages/SettingsPage');
-  var expect = require('intern/dojo/node!expect.js');
-  var Promise = require('bluebird');
+import {
+  bdd,
+  common,
+  remote,
+  scenarioManager,
+  settingsPage,
+  esClient
+} from '../../../support';
 
-  return function (bdd, scenarioManager) {
+(function () {
+  var expect = require('expect.js');
+
+  (function () {
     bdd.describe('creating and deleting default index', function describeIndexTests() {
-      var common;
-      var settingsPage;
-      var remote;
-
       bdd.before(function () {
-        common = new Common(this.remote);
-        settingsPage = new SettingsPage(this.remote);
-        remote = this.remote;
-
-        return scenarioManager.reload('emptyKibana')
+        // delete .kibana index and then wait for Kibana to re-create it
+        return esClient.deleteAndUpdateConfigDoc()
         .then(function () {
           return settingsPage.navigateTo();
         });
@@ -35,7 +34,7 @@ define(function (require) {
         });
 
         bdd.it('should have index pattern in url', function url() {
-          return common.tryForTime(5000, function () {
+          return common.try(function tryingForTime() {
             return remote.getCurrentUrl()
             .then(function (currentUrl) {
               expect(currentUrl).to.contain('logstash-*');
@@ -47,6 +46,7 @@ define(function (require) {
         bdd.it('should have expected table headers', function checkingHeader() {
           return settingsPage.getTableHeader()
           .then(function (headers) {
+            common.debug('header.length = ' + headers.length);
             var expectedHeaders = [
               'name',
               'type',
@@ -82,7 +82,7 @@ define(function (require) {
         });
 
         bdd.it('should return to index pattern creation page', function returnToPage() {
-          return common.tryForTime(5000, function () {
+          return common.try(function tryingForTime() {
             return settingsPage.getCreateButton();
           })
           .catch(common.handleError(this));
@@ -90,9 +90,10 @@ define(function (require) {
 
         bdd.it('should remove index pattern from url', function indexNotInUrl() {
           // give the url time to settle
-          return common.tryForTime(5000, function () {
+          return common.try(function tryingForTime() {
             return remote.getCurrentUrl()
             .then(function (currentUrl) {
+              common.debug('currentUrl = ' + currentUrl);
               expect(currentUrl).to.not.contain('logstash-*');
             });
           })
@@ -100,5 +101,5 @@ define(function (require) {
         });
       });
     });
-  };
-});
+  }());
+}());

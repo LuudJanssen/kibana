@@ -4,14 +4,22 @@ Kibana is an open source ([Apache Licensed](https://github.com/elastic/kibana/bl
 
 ## Requirements
 
-- Elasticsearch version 2.1.0 or later
+- Elasticsearch master
 - Kibana binary package
 
 ## Installation
 
 * Download: [http://www.elastic.co/downloads/kibana](http://www.elastic.co/downloads/kibana)
+* Extract the files
 * Run `bin/kibana` on unix, or `bin\kibana.bat` on Windows.
 * Visit [http://localhost:5601](http://localhost:5601)
+
+
+## Upgrade from previous version
+
+* Move any custom configurations in your old kibana.yml to your new one
+* Reinstall plugins
+* Start or restart Kibana
 
 ## Quick Start
 
@@ -33,9 +41,9 @@ Visit [Elastic.co](http://www.elastic.co/guide/en/kibana/current/index.html) for
 
 For the daring, snapshot builds are available. These builds are created after each commit to the master branch, and therefore are not something you should run in production.
 
-| platform |  |  |
-| --- | --- | --- |
-| OSX | [tar](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-darwin-x64.tar.gz) | [zip](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-darwin-x64.zip) |
-| Linux x64 | [tar](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-linux-x64.tar.gz) | [zip](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-linux-x64.zip) |
-| Linux x86 | [tar](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-linux-x86.tar.gz) | [zip](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-linux-x86.zip) |
-| Windows | [tar](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-windows.tar.gz) | [zip](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-windows.zip) |
+| platform |  |
+| --- | --- |
+| OSX | [tar](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-darwin-x64.tar.gz) |
+| Linux x64 | [tar](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-linux-x64.tar.gz) [deb](https://download.elastic.co/kibana/kibana-snapshot/kibana_5.0.0-snapshot_amd64.deb) [rpm](https://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0_snapshot-1.x86_64.rpm) |
+| Linux x86 | [tar](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-linux-x86.tar.gz) [deb](https://download.elastic.co/kibana/kibana-snapshot/kibana_5.0.0-snapshot_i386.deb) [rpm](https://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0_snapshot-1.i386.rpm) |
+| Windows | [zip](http://download.elastic.co/kibana/kibana-snapshot/kibana-5.0.0-snapshot-windows.zip) |

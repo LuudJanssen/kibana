@@ -1,17 +1,18 @@
+import expect from 'expect.js';
+import ngMock from 'ng_mock';
+import AggResponsePointSeriesAddToSiriProvider from 'ui/agg_response/point_series/_add_to_siri';
 describe('addToSiri', function () {
-  var expect = require('expect.js');
-  var ngMock = require('ngMock');
-  var addToSiri;
+  let addToSiri;
 
   beforeEach(ngMock.module('kibana'));
   beforeEach(ngMock.inject(function (Private) {
-    addToSiri = Private(require('ui/agg_response/point_series/_add_to_siri'));
+    addToSiri = Private(AggResponsePointSeriesAddToSiriProvider);
   }));
 
   it('creates a new series the first time it sees an id', function () {
-    var series = new Map();
-    var point = {};
-    var id = 'id';
+    let series = new Map();
+    let point = {};
+    let id = 'id';
     addToSiri(series, point, id);
 
     expect(series.has(id)).to.be(true);
@@ -22,13 +23,13 @@ describe('addToSiri', function () {
   });
 
   it('adds points to existing series if id has been seen', function () {
-    var series = new Map();
-    var id = 'id';
+    let series = new Map();
+    let id = 'id';
 
-    var point = {};
+    let point = {};
     addToSiri(series, point, id);
 
-    var point2 = {};
+    let point2 = {};
     addToSiri(series, point2, id);
 
     expect(series.has(id)).to.be(true);
@@ -40,10 +41,10 @@ describe('addToSiri', function () {
   });
 
   it('allows overriding the series label', function () {
-    var series = new Map();
-    var id = 'id';
-    var label = 'label';
-    var point = {};
+    let series = new Map();
+    let id = 'id';
+    let label = 'label';
+    let point = {};
     addToSiri(series, point, id, label);
 
     expect(series.has(id)).to.be(true);

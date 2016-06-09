@@ -1,39 +1,27 @@
-define(function (require) {
-  var bdd = require('intern!bdd');
-  var config = require('intern').config;
-  var url = require('intern/dojo/node!url');
-  var ScenarioManager = require('intern/dojo/node!../../../fixtures/scenarioManager');
+import { bdd, defaultTimeout, scenarioManager, esClient, common } from '../../../support';
 
-  var initialStateTest = require('./_initial_state');
-  var creationChangesTest = require('./_creation_form_changes');
-  var indexPatternCreateDeleteTest = require('./_index_pattern_create_delete');
-  var indexPatternResultsSortTest = require('./_index_pattern_results_sort');
-  var indexPatternPopularityTest = require('./_index_pattern_popularity');
-
+(function () {
   bdd.describe('settings app', function () {
-    var scenarioManager = new ScenarioManager(url.format(config.servers.elasticsearch));
-    this.timeout = 120000;
+    this.timeout = defaultTimeout;
 
     // on setup, we create an settingsPage instance
     // that we will use for all the tests
     bdd.before(function () {
-      return scenarioManager.reload('emptyKibana')
-      .then(function () {
-        return scenarioManager.loadIfEmpty('makelogs');
-      });
+      return scenarioManager.loadIfEmpty('makelogs');
     });
 
     bdd.after(function () {
       return scenarioManager.unload('makelogs')
       .then(function () {
-        scenarioManager.unload('emptyKibana');
+        return esClient.delete('.kibana');
       });
     });
 
-    initialStateTest(bdd, scenarioManager);
-    creationChangesTest(bdd, scenarioManager);
-    indexPatternCreateDeleteTest(bdd, scenarioManager);
-    indexPatternResultsSortTest(bdd, scenarioManager);
-    indexPatternPopularityTest(bdd, scenarioManager);
+    require('./_initial_state');
+    require('./_creation_form_changes');
+    require('./_index_pattern_create_delete');
+    require('./_index_pattern_results_sort');
+    require('./_index_pattern_popularity');
+    require('./_advanced_settings');
   });
-});
+}());

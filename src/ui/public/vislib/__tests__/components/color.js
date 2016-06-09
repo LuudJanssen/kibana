@@ -1,36 +1,40 @@
-var angular = require('angular');
-var expect = require('expect.js');
-var ngMock = require('ngMock');
-const _ = require('lodash');
-const d3 = require('d3');
+import angular from 'angular';
+import expect from 'expect.js';
+import ngMock from 'ng_mock';
+import _ from 'lodash';
+import d3 from 'd3';
+import VislibComponentsColorSeedColorsProvider from 'ui/vislib/components/color/seed_colors';
+import VislibComponentsColorColorProvider from 'ui/vislib/components/color/color';
+import VislibComponentsColorMappedColorsProvider from 'ui/vislib/components/color/mapped_colors';
+import VislibComponentsColorColorPaletteProvider from 'ui/vislib/components/color/color_palette';
 
 describe('Vislib Color Module Test Suite', function () {
-  var seedColors;
-  var mappedColors;
+  let seedColors;
+  let mappedColors;
   let config;
 
   describe('Color (main)', function () {
     let previousConfig;
-    var getColors;
-    var arr = ['good', 'better', 'best', 'never', 'let', 'it', 'rest'];
-    var arrayOfNumbers = [1, 2, 3, 4, 5];
-    var arrayOfUndefinedValues = [undefined, undefined, undefined];
-    var arrayOfObjects = [{}, {}, {}];
-    var arrayOfBooleans = [true, false, true];
-    var arrayOfNullValues = [null, null, null];
-    var emptyObject = {};
-    var nullValue = null;
-    var notAValue;
-    var color;
+    let getColors;
+    let arr = ['good', 'better', 'best', 'never', 'let', 'it', 'rest'];
+    let arrayOfNumbers = [1, 2, 3, 4, 5];
+    let arrayOfUndefinedValues = [undefined, undefined, undefined];
+    let arrayOfObjects = [{}, {}, {}];
+    let arrayOfBooleans = [true, false, true];
+    let arrayOfNullValues = [null, null, null];
+    let emptyObject = {};
+    let nullValue = null;
+    let notAValue;
+    let color;
 
     beforeEach(ngMock.module('kibana'));
     beforeEach(ngMock.inject((Private, config) => {
       previousConfig = config.get('visualization:colorMapping');
       config.set('visualization:colorMapping', {});
-      seedColors = Private(require('ui/vislib/components/color/seed_colors'));
-      getColors = Private(require('ui/vislib/components/color/color'));
-      mappedColors = Private(require('ui/vislib/components/color/mapped_colors'));
-      color = getColors(arr);
+      seedColors = Private(VislibComponentsColorSeedColorsProvider);
+      getColors = Private(VislibComponentsColorColorProvider);
+      mappedColors = Private(VislibComponentsColorMappedColorsProvider);
+      color = getColors(arr, {});
     }));
 
     afterEach(ngMock.inject((config) => {
@@ -110,6 +114,11 @@ describe('Vislib Color Module Test Suite', function () {
     it('should return the value from the mapped colors', function () {
       expect(color(arr[1])).to.be(mappedColors.get(arr[1]));
     });
+
+    it('should return the value from the specified color mapping overrides', function () {
+      const colorFn = getColors(arr, {good: 'red'});
+      expect(colorFn('good')).to.be('red');
+    });
   });
 
   describe('Seed Colors', function () {
@@ -124,7 +133,8 @@ describe('Vislib Color Module Test Suite', function () {
     beforeEach(ngMock.module('kibana'));
     beforeEach(ngMock.inject((Private, config) => {
       previousConfig = config.get('visualization:colorMapping');
-      mappedColors = Private(require('ui/vislib/components/color/mapped_colors'));
+      mappedColors = Private(VislibComponentsColorMappedColorsProvider);
+      seedColors = Private(VislibComponentsColorSeedColorsProvider);
       mappedColors.mapping = {};
     }));
 
@@ -178,56 +188,129 @@ describe('Vislib Color Module Test Suite', function () {
       expect(mappedColors.get(arr[0])).to.not.be(seedColors[0]);
       expect(mappedColors.get('bar')).to.be(seedColors[0]);
     }));
+
+    it('should have a flush method that moves the current map to the old map', function () {
+      const arr = [1, 2, 3, 4, 5];
+      mappedColors.mapKeys(arr);
+      expect(_.keys(mappedColors.mapping).length).to.be(5);
+      expect(_.keys(mappedColors.oldMap).length).to.be(0);
+
+      mappedColors.flush();
+
+      expect(_.keys(mappedColors.oldMap).length).to.be(5);
+      expect(_.keys(mappedColors.mapping).length).to.be(0);
+
+      mappedColors.flush();
+
+      expect(_.keys(mappedColors.oldMap).length).to.be(0);
+      expect(_.keys(mappedColors.mapping).length).to.be(0);
+    });
+
+    it('should use colors in the oldMap if they are available', function () {
+      const arr = [1, 2, 3, 4, 5];
+      mappedColors.mapKeys(arr);
+      expect(_.keys(mappedColors.mapping).length).to.be(5);
+      expect(_.keys(mappedColors.oldMap).length).to.be(0);
+
+      mappedColors.flush();
+
+      mappedColors.mapKeys([3, 4, 5]);
+      expect(_.keys(mappedColors.oldMap).length).to.be(5);
+      expect(_.keys(mappedColors.mapping).length).to.be(3);
+
+      expect(mappedColors.mapping[1]).to.be(undefined);
+      expect(mappedColors.mapping[2]).to.be(undefined);
+      expect(mappedColors.mapping[3]).to.equal(mappedColors.oldMap[3]);
+      expect(mappedColors.mapping[4]).to.equal(mappedColors.oldMap[4]);
+      expect(mappedColors.mapping[5]).to.equal(mappedColors.oldMap[5]);
+    });
+
+    it('should have a purge method that clears both maps', function () {
+      const arr = [1, 2, 3, 4, 5];
+      mappedColors.mapKeys(arr);
+      mappedColors.flush();
+      mappedColors.mapKeys(arr);
+
+      expect(_.keys(mappedColors.mapping).length).to.be(5);
+      expect(_.keys(mappedColors.oldMap).length).to.be(5);
+
+      mappedColors.purge();
+
+      expect(_.keys(mappedColors.mapping).length).to.be(0);
+      expect(_.keys(mappedColors.oldMap).length).to.be(0);
+
+    });
   });
 
   describe('Color Palette', function () {
-    var colorCount = 42;
-    var colors;
-    var colorFn;
+    let num1 = 45;
+    let num2 = 72;
+    let num3 = 90;
+    let string = 'Welcome';
+    let bool = true;
+    let nullValue = null;
+    let emptyArr = [];
+    let emptyObject = {};
+    let notAValue;
+    let createColorPalette;
+    let colorPalette;
 
     beforeEach(ngMock.module('kibana'));
     beforeEach(ngMock.inject(function (Private) {
-      seedColors = Private(require('ui/vislib/components/color/seed_colors'));
-      colorFn = Private(require('ui/vislib/components/color/color_palette'));
-      colors = colorFn(colorCount);
+      seedColors = Private(VislibComponentsColorSeedColorsProvider);
+      createColorPalette = Private(VislibComponentsColorColorPaletteProvider);
+      colorPalette = createColorPalette(num1);
     }));
 
+    it('should throw an error if input is not a number', function () {
+      expect(function () {
+        createColorPalette(string);
+      }).to.throwError();
+
+      expect(function () {
+        createColorPalette(bool);
+      }).to.throwError();
+
+      expect(function () {
+        createColorPalette(nullValue);
+      }).to.throwError();
+
+      expect(function () {
+        createColorPalette(emptyArr);
+      }).to.throwError();
+
+      expect(function () {
+        createColorPalette(emptyObject);
+      }).to.throwError();
+
+      expect(function () {
+        createColorPalette(notAValue);
+      }).to.throwError();
+    });
+
     it('should be a function', function () {
-      expect(colorFn).to.be.a(Function);
+      expect(typeof createColorPalette).to.be('function');
     });
 
     it('should return an array', function () {
-      expect(colors).to.be.a(Array);
+      expect(colorPalette instanceof Array).to.be(true);
     });
 
     it('should return an array of the same length as the input', function () {
-      expect(colors.length).to.be(colorCount);
+      expect(colorPalette.length).to.be(num1);
     });
 
-    it('should use the seed colors first', function () {
-      _.each(seedColors, function (color, i) {
-        expect(color).to.equal(colors[i]);
-      });
+    it('should return the seed color array when input length is 72', function () {
+      expect(createColorPalette(num2)[71]).to.be(seedColors[71]);
     });
 
-    it('should then generate a darker version of the seed', function () {
-      var parsedSeed = d3.hsl(seedColors[0]);
-      var parsedResult = d3.hsl(colors[seedColors.length]);
-      expect(parsedResult.l).to.be.lessThan(parsedSeed.l);
+    it('should return an array of the same length as the input when input is greater than 72', function () {
+      expect(createColorPalette(num3).length).to.be(num3);
     });
 
-    it('followed by a lighter version', function () {
-      var parsedSeed = d3.hsl(seedColors[0]);
-      var parsedResult = d3.hsl(colors[seedColors.length * 2]);
-      expect(parsedResult.l).to.be.greaterThan(parsedSeed.l);
+    it('should create new darker colors when input is greater than 72', function () {
+      expect(createColorPalette(num3)[72]).not.to.equal(seedColors[0]);
     });
-
-    it('and then a darker version again', function () {
-      var parsedSeed = d3.hsl(seedColors[0]);
-      var parsedResult = d3.hsl(colors[seedColors.length * 3]);
-      expect(parsedResult.l).to.be.lessThan(parsedSeed.l);
-    });
-
 
   });
 });

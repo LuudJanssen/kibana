@@ -1,42 +1,44 @@
-define(function (require) {
-  var _ = require('lodash');
-  var errors = require('ui/errors');
+import _ from 'lodash';
 
-  return function (Promise, Private, es) {
-    var requestQueue = Private(require('ui/courier/_request_queue'));
-    var courierFetch = Private(require('ui/courier/fetch/fetch'));
+import errors from 'ui/errors';
+import RequestQueueProvider from 'ui/courier/_request_queue';
+import FetchProvider from 'ui/courier/fetch/fetch';
 
-    /**
-     * Backend for doUpdate and doIndex
-     * @param  {String} method - the client method to call
-     * @param  {Boolean} validateVersion - should our knowledge
-     *                                   of the the docs current version be sent to es?
-     * @param  {String} body - HTTP request body
-     */
-    return function (method, validateVersion, body, ignore) {
-      var doc = this;
-      // straight assignment will causes undefined values
-      var params = _.pick(this._state, ['id', 'type', 'index']);
-      params.body = body;
-      params.ignore = ignore || [409];
+export default function (Promise, Private, es) {
+  let requestQueue = Private(RequestQueueProvider);
+  let courierFetch = Private(FetchProvider);
 
-      if (validateVersion && params.id) {
-        params.version = doc._getVersion();
-      }
+  /**
+   * Backend for doUpdate and doIndex
+   * @param  {String} method - the client method to call
+   * @param  {Boolean} validateVersion - should our knowledge
+   *                                   of the the docs current version be sent to es?
+   * @param  {String} body - HTTP request body
+   */
+  return function (method, validateVersion, body, ignore) {
+    let doc = this;
+    // straight assignment will causes undefined values
+    let params = _.pick(this._state, ['id', 'type', 'index']);
+    params.body = body;
+    params.ignore = ignore || [409];
 
-      return es[method](params)
-      .then(function (resp) {
-        if (resp.status === 409) throw new errors.VersionConflict(resp);
+    if (validateVersion && params.id) {
+      params.version = doc._getVersion();
+    }
 
-        doc._storeVersion(resp._version);
-        doc.id(resp._id);
+    return es[method](params)
+    .then(function (resp) {
+      if (resp.status === 409) throw new errors.VersionConflict(resp);
 
-        var docFetchProm;
+      doc._storeVersion(resp._version);
+      doc.id(resp._id);
+
+        let docFetchProm;
         if (method !== 'index') {
           docFetchProm = doc.fetch();
         } else {
           // we already know what the response will be
-          var id = body.title;
+          let id = body.title;
           if (body.timeFieldName !== undefined) {
             id = body.title + '(' + body.timeFieldName + ')';
           }
@@ -50,37 +52,36 @@ define(function (require) {
           });
         }
 
-        // notify pending request for this same document that we have updates
-        docFetchProm.then(function (fetchResp) {
-          // use the key to compair sources
-          var key = doc._versionKey();
+      // notify pending request for this same document that we have updates
+      docFetchProm.then(function (fetchResp) {
+        // use the key to compair sources
+        let key = doc._versionKey();
 
-          // clear the queue and filter out the removed items, pushing the
-          // unmatched ones back in.
-          var respondTo = requestQueue.splice(0).filter(function (req) {
-            var isDoc = req.source._getType() === 'doc';
-            var keyMatches = isDoc && req.source._versionKey() === key;
+        // clear the queue and filter out the removed items, pushing the
+        // unmatched ones back in.
+        let respondTo = requestQueue.splice(0).filter(function (req) {
+          let isDoc = req.source._getType() === 'doc';
+          let keyMatches = isDoc && req.source._versionKey() === key;
 
-            // put some request back into the queue
-            if (!keyMatches) {
-              requestQueue.push(req);
-              return false;
-            }
+          // put some request back into the queue
+          if (!keyMatches) {
+            requestQueue.push(req);
+            return false;
+          }
 
-            return true;
-          });
-
-          return courierFetch.fakeFetchThese(respondTo, respondTo.map(function () {
-            return _.cloneDeep(fetchResp);
-          }));
+          return true;
         });
 
-        return resp._id;
-      })
-      .catch(function (err) {
-        // cast the error
-        throw new errors.RequestFailure(err);
+        return courierFetch.fakeFetchThese(respondTo, respondTo.map(function () {
+          return _.cloneDeep(fetchResp);
+        }));
       });
-    };
+
+      return resp._id;
+    })
+    .catch(function (err) {
+      // cast the error
+      throw new errors.RequestFailure(err);
+    });
   };
-});
+};

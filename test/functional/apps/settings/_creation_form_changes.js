@@ -1,20 +1,19 @@
-define(function (require) {
-  var Common = require('../../../support/pages/Common');
-  var SettingsPage = require('../../../support/pages/SettingsPage');
-  var expect = require('intern/dojo/node!expect.js');
+import {
+  bdd,
+  common,
+  settingsPage,
+  scenarioManager,
+  esClient
+} from '../../../support';
 
-  return function (bdd, scenarioManager) {
+(function () {
+  var expect = require('expect.js');
+
+  (function () {
     bdd.describe('user input reactions', function () {
-      var common;
-      var settingsPage;
-
-      bdd.before(function () {
-        common = new Common(this.remote);
-        settingsPage = new SettingsPage(this.remote);
-      });
-
       bdd.beforeEach(function () {
-        return scenarioManager.reload('emptyKibana')
+        // delete .kibana index and then wait for Kibana to re-create it
+        return esClient.deleteAndUpdateConfigDoc()
         .then(function () {
           return settingsPage.navigateTo();
         });
@@ -56,5 +55,5 @@ define(function (require) {
         .catch(common.handleError(this));
       });
     });
-  };
-});
+  }());
+}());

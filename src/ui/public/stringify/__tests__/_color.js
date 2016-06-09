@@ -1,18 +1,19 @@
+import expect from 'expect.js';
+import ngMock from 'ng_mock';
+import RegistryFieldFormatsProvider from 'ui/registry/field_formats';
 describe('Color Format', function () {
-  var fieldFormats;
-  var ColorFormat;
-  var expect = require('expect.js');
-  var ngMock = require('ngMock');
+  let fieldFormats;
+  let ColorFormat;
 
   beforeEach(ngMock.module('kibana'));
   beforeEach(ngMock.inject(function (Private) {
-    fieldFormats = Private(require('ui/registry/field_formats'));
+    fieldFormats = Private(RegistryFieldFormatsProvider);
     ColorFormat = fieldFormats.getType('color');
 
   }));
 
   it('should add colors if the value is in range', function () {
-    var colorer = new ColorFormat({
+    let colorer = new ColorFormat({
       colors: [{
         range: '100:150',
         text: 'blue',
@@ -26,7 +27,7 @@ describe('Color Format', function () {
   });
 
   it('should not convert invalid ranges', function () {
-    var colorer = new ColorFormat({
+    let colorer = new ColorFormat({
       colors: [{
         range: '100150',
         text: 'blue',

@@ -1,18 +1,19 @@
-define(function (require) {
-  var expect = require('intern/dojo/node!expect.js');
-  var Common = require('../../../support/pages/Common');
-  var SettingsPage = require('../../../support/pages/SettingsPage');
+import {
+  bdd,
+  common,
+  scenarioManager,
+  settingsPage,
+  esClient
+} from '../../../support';
 
-  return function (bdd, scenarioManager) {
+(function () {
+  var expect = require('expect.js');
+
+  (function () {
     bdd.describe('initial state', function () {
-      var common;
-      var settingsPage;
-
       bdd.before(function () {
-        common = new Common(this.remote);
-        settingsPage = new SettingsPage(this.remote);
-
-        return scenarioManager.reload('emptyKibana')
+        // delete .kibana index and then wait for Kibana to re-create it
+        return esClient.deleteAndUpdateConfigDoc()
         .then(function () {
           return settingsPage.navigateTo();
         });
@@ -47,6 +48,7 @@ define(function (require) {
       bdd.it('should not select the time field', function () {
         return settingsPage.getTimeFieldNameField().isSelected()
         .then(function (timeFieldIsSelected) {
+          common.debug('timeField isSelected = ' + timeFieldIsSelected);
           expect(timeFieldIsSelected).to.not.be.ok();
         })
         .catch(common.handleError(this));
@@ -60,5 +62,5 @@ define(function (require) {
         .catch(common.handleError(this));
       });
     });
-  };
-});
+  }());
+}());

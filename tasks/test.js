@@ -7,7 +7,8 @@ module.exports = function (grunt) {
   grunt.registerTask('test:quick', [
     'test:server',
     'test:ui',
-    'test:browser'
+    'test:browser',
+    'test:api'
   ]);
 
   grunt.registerTask('test:dev', [
@@ -37,11 +38,29 @@ module.exports = function (grunt) {
     'intern:dev'
   ]);
 
+  grunt.registerTask('test:api', [
+    'esvm:ui',
+    'run:apiTestServer',
+    'intern:api',
+    'esvm_shutdown:ui',
+    'stop:apiTestServer'
+  ]);
+
+  grunt.registerTask('test:api:server', [
+    'esvm:ui',
+    'run:apiTestServer:keepalive'
+  ]);
+
+  grunt.registerTask('test:api:runner', [
+    'intern:api'
+  ]);
+
   grunt.registerTask('test', function (subTask) {
     if (subTask) grunt.fail.fatal(`invalid task "test:${subTask}"`);
 
     grunt.task.run(_.compact([
       !grunt.option('quick') && 'eslint:source',
+      'licenses',
       'test:quick'
     ]));
   });
